@@ -22,6 +22,7 @@ To start the local development server:
 `
 npm run start
 `
+The server will run at `http://localhost:8080`.
 
 ## features
 - [Invert-colour](#invert)
