@@ -17,6 +17,12 @@ cd canva-apps-sdk-starter-kit
 npm install
 `
 
+# Starting the App
+To start the local development server:
+`
+npm run start
+`
+
 ## features
 - [Invert-colour](#invert)
 - [Film-effect](#film)#
