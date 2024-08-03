@@ -9,6 +9,14 @@ This repository contains projects developed for the Canva AI and Integration Hac
 - npm `v9` or `v10`
 - Basic knowledge of TypeScript, React, and webpack
 
+## Cloning the Repository
+To get started, clone the repository:
+`
+git clone https://github.com/canva-sdks/canva-apps-sdk-starter-kit.git
+cd canva-apps-sdk-starter-kit
+npm install
+`
+
 ## features
 - [Invert-colour](#invert)
 - [Film-effect](#film)#
