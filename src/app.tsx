@@ -1,23 +1,24 @@
-import React from "react";
-import { Button, Rows, Text } from "@canva/app-ui-kit";
+import React, { useState } from "react";
+import { upload } from "@canva/asset";
+import { Button, Rows, Text, Select, Slider, Checkbox } from "@canva/app-ui-kit";
 import { useSelection } from "utils/use_selection_hook";
-import { getTemporaryUrl, upload, ImageMimeType, ImageRef } from "@canva/asset";
 import styles from "styles/components.css";
+import { invertColors, transformRasterImage as transformInvertImage } from "./features/invertColor/invertColor";
+import { applyFilmEffect, transformRasterImage as transformFilmImage } from "./features/filmEffect/filmEffect";
+import { applyChevronPattern, transformRasterImage as transformChevronImage } from "./features/chevronPattern/chevronPattern";
+import { applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
 
 export function App() {
   const currentSelection = useSelection("image");
   const isElementSelected = currentSelection.count > 0;
+  const [effectType, setEffectType] = useState("grain");
+  const [effectIntensity, setEffectIntensity] = useState(50);
+  const [overlayIndex, setOverlayIndex] = useState(0);
+  const [sunFading, setSunFading] = useState(false);
+  const [patternSize, setPatternSize] = useState(10);
+  const [dotSize, setDotSize] = useState(5);
 
-  const invertColors = (imageData: ImageData) => {
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      imageData.data[i] = 255 - imageData.data[i];     // Red
-      imageData.data[i + 1] = 255 - imageData.data[i + 1]; // Green
-      imageData.data[i + 2] = 255 - imageData.data[i + 2]; // Blue
-    }
-    return imageData;
-  };
-
-  async function handleClick() {
+  async function handleClickInvert() {
     if (!isElementSelected) {
       return;
     }
@@ -25,8 +26,7 @@ export function App() {
     const draft = await currentSelection.read();
 
     for (const content of draft.contents) {
-      // Download and transform the image
-      const newImage = await transformRasterImage(
+      const newImage = await transformInvertImage(
         content.ref,
         (_, { data }) => {
           for (let i = 0; i < data.length; i += 4) {
@@ -37,7 +37,6 @@ export function App() {
         }
       );
 
-      // Upload the transformed image
       const asset = await upload({
         type: "IMAGE",
         url: newImage.dataUrl,
@@ -46,7 +45,93 @@ export function App() {
         parentRef: content.ref,
       });
 
-      // Replace the image
+      content.ref = asset.ref;
+    }
+
+    await draft.save();
+  }
+
+  async function handleClickFilmEffect() {
+    if (!isElementSelected) {
+      return;
+    }
+
+    const draft = await currentSelection.read();
+
+    for (const content of draft.contents) {
+      const newImage = await transformFilmImage(
+        content.ref,
+        async (ctx, imageData) => {
+          return await applyFilmEffect(imageData, effectType, effectIntensity);
+        }
+      );
+
+      const asset = await upload({
+        type: "IMAGE",
+        url: newImage.dataUrl,
+        mimeType: newImage.mimeType,
+        thumbnailUrl: newImage.dataUrl,
+        parentRef: content.ref,
+      });
+
+      content.ref = asset.ref;
+    }
+
+    await draft.save();
+  }
+
+  async function handleClickChevronPattern() {
+    if (!isElementSelected) {
+      return;
+    }
+
+    const draft = await currentSelection.read();
+
+    for (const content of draft.contents) {
+      const newImage = await transformChevronImage(
+        content.ref,
+        (ctx, imageData) => {
+          return applyChevronPattern(imageData, patternSize);
+        }
+      );
+
+      const asset = await upload({
+        type: "IMAGE",
+        url: newImage.dataUrl,
+        mimeType: newImage.mimeType,
+        thumbnailUrl: newImage.dataUrl,
+        parentRef: content.ref,
+      });
+
+      content.ref = asset.ref;
+    }
+
+    await draft.save();
+  }
+
+  async function handleClickHalftonePattern() {
+    if (!isElementSelected) {
+      return;
+    }
+
+    const draft = await currentSelection.read();
+
+    for (const content of draft.contents) {
+      const newImage = await transformHalftoneImage(
+        content.ref,
+        (ctx, imageData) => {
+          return applyHalftonePattern(imageData, dotSize);
+        }
+      );
+
+      const asset = await upload({
+        type: "IMAGE",
+        url: newImage.dataUrl,
+        mimeType: newImage.mimeType,
+        thumbnailUrl: newImage.dataUrl,
+        parentRef: content.ref,
+      });
+
       content.ref = asset.ref;
     }
 
@@ -55,7 +140,7 @@ export function App() {
 
   return (
     <div className={styles.scrollContainer}>
-      <Rows spacing="1u">
+      <Rows spacing="2u">
         <Text>
           To make changes to this app, edit the <code>src/app.tsx</code> file,
           then close and reopen the app in the editor to preview the changes.
@@ -63,90 +148,65 @@ export function App() {
         <Button
           variant="primary"
           disabled={!isElementSelected}
-          onClick={handleClick}
+          onClick={handleClickInvert}
           stretch
         >
           Invert Colors
         </Button>
+        <Select
+          options={[
+            { label: "Film Grain", value: "grain" },
+            { label: "Grunge", value: "grunge" },
+          ]}
+          value={effectType}
+          onChange={(value) => setEffectType(value)}
+        />
+        <Slider
+          value={effectIntensity}
+          onChange={(value) => setEffectIntensity(value)}
+          min={0}
+          max={100}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickFilmEffect}
+          stretch
+        >
+          Apply Film Effect
+        </Button>
+        <Slider
+          value={patternSize}
+          onChange={(value) => setPatternSize(value)}
+          min={1}
+          max={50}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickChevronPattern}
+          stretch
+        >
+          Apply Chevron Pattern
+        </Button>
+        <Slider
+          value={dotSize}
+          onChange={(value) => setDotSize(value)}
+          min={1}
+          max={20}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickHalftonePattern}
+          stretch
+        >
+          Apply Halftone Pattern
+        </Button>
       </Rows>
     </div>
   );
-}
-
-/**
- * Downloads and transforms a raster image.
- * @param ref - A unique identifier that points to an image asset in Canva's backend.
- * @param transformer - A function that transforms the image.
- * @returns The data URL and MIME type of the transformed image.
- */
-async function transformRasterImage(
-  ref: ImageRef,
-  transformer: (ctx: CanvasRenderingContext2D, imageData: ImageData) => void
-): Promise<{ dataUrl: string; mimeType: ImageMimeType }> {
-  // Get a temporary URL for the asset
-  const { url } = await getTemporaryUrl({
-    type: "IMAGE",
-    ref,
-  });
-
-  // Download the image
-  const response = await fetch(url, { mode: "cors" });
-  const imageBlob = await response.blob();
-
-  // Extract MIME type from the downloaded image
-  const mimeType = imageBlob.type;
-
-  // Warning: This doesn't attempt to handle SVG images
-  if (!isSupportedMimeType(mimeType)) {
-    throw new Error(`Unsupported mime type: ${mimeType}`);
-  }
-
-  // Create an object URL for the image
-  const objectURL = URL.createObjectURL(imageBlob);
-
-  // Define an image element and load image from the object URL
-  const image = new Image();
-  image.crossOrigin = "Anonymous";
-
-  await new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = () => reject(new Error("Image could not be loaded"));
-    image.src = objectURL;
-  });
-
-  // Create a canvas and draw the image onto it
-  const canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("CanvasRenderingContext2D is not available");
-  }
-
-  ctx.drawImage(image, 0, 0);
-
-  // Get the image data from the canvas to manipulate pixels
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  transformer(ctx, imageData);
-
-  // Put the transformed image data back onto the canvas
-  ctx.putImageData(imageData, 0, 0);
-
-  // Clean up: Revoke the object URL to free up memory
-  URL.revokeObjectURL(objectURL);
-
-  // Convert the canvas content to a data URL with the original MIME type
-  const dataUrl = canvas.toDataURL(mimeType);
-
-  return { dataUrl, mimeType };
-}
-
-function isSupportedMimeType(
-  input: string
-): input is "image/jpeg" | "image/heic" | "image/png" | "image/webp" {
-  // This does not include "image/svg+xml"
-  const mimeTypes = ["image/jpeg", "image/heic", "image/png", "image/webp"];
-  return mimeTypes.includes(input);
 }
