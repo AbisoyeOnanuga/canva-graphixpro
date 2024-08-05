@@ -177,21 +177,6 @@ export function App() {
           Apply Film Effect
         </Button>
         <Slider
-          value={patternSize}
-          onChange={(value) => setPatternSize(value)}
-          min={1}
-          max={50}
-          step={1}
-        />
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickChevronPattern}
-          stretch
-        >
-          Apply Chevron Pattern
-        </Button>
-        <Slider
           value={dotSize}
           onChange={(value) => setDotSize(value)}
           min={1}
@@ -205,6 +190,21 @@ export function App() {
           stretch
         >
           Apply Halftone Pattern
+        </Button>
+        <Slider
+          value={patternSize}
+          onChange={(value) => setPatternSize(value)}
+          min={1}
+          max={50}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickChevronPattern}
+          stretch
+        >
+          Apply Chevron Pattern
         </Button>
       </Rows>
     </div>
