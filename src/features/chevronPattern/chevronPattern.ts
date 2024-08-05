@@ -11,12 +11,12 @@ export const applyChevronPattern = (imageData: ImageData, patternSize: number) =
 
   ctx.fillStyle = "#000";
   for (let y = 0; y < canvas.height; y += patternSize * 2) {
-    for (let x = 0; x < canvas.width; x += patternSize * 2) {
+    for (let x = -patternSize; x < canvas.width; x += patternSize * 2) {
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x + patternSize, y + patternSize);
-      ctx.lineTo(x, y + patternSize * 2);
-      ctx.lineTo(x - patternSize, y + patternSize);
+      ctx.lineTo(x + patternSize * 2, y);
+      ctx.lineTo(x + patternSize, y - patternSize);
       ctx.closePath();
       ctx.fill();
     }
