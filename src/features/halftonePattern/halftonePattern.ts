@@ -1,6 +1,6 @@
 import { getTemporaryUrl, upload, ImageMimeType, ImageRef } from "@canva/asset";
 
-export const applyHalftonePattern = (imageData: ImageData, dotSize: number): string => {
+export const applyHalftonePattern = (imageData: ImageData, dotSize: number) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("CanvasRenderingContext2D is not available");
@@ -22,12 +22,12 @@ export const applyHalftonePattern = (imageData: ImageData, dotSize: number): str
     }
   }
 
-  return canvas.toDataURL();
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
 };
 
 export async function transformRasterImage(
   ref: ImageRef,
-  transformer: (ctx: CanvasRenderingContext2D, imageData: ImageData) => string
+  transformer: (ctx: CanvasRenderingContext2D, imageData: ImageData) => ImageData
 ): Promise<{ dataUrl: string; mimeType: ImageMimeType }> {
   const { url } = await getTemporaryUrl({
     type: "IMAGE",
@@ -64,9 +64,11 @@ export async function transformRasterImage(
   ctx.drawImage(image, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const newImageData = transformer(ctx, imageData);
+  ctx.putImageData(newImageData, 0, 0);
   URL.revokeObjectURL(objectURL);
+  const dataUrl = canvas.toDataURL(mimeType);
 
-  return { dataUrl: newImageData, mimeType };
+  return { dataUrl, mimeType };
 }
 
 function isSupportedMimeType(
