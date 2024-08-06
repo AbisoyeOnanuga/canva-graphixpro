@@ -1,22 +1,21 @@
 import React, { useState } from "react";
 import { upload } from "@canva/asset";
-import { Button, Rows, Text, Select, Slider, Checkbox } from "@canva/app-ui-kit";
+import { Button, Rows, Text, Select, Slider } from "@canva/app-ui-kit";
 import { useSelection } from "utils/use_selection_hook";
 import styles from "styles/components.css";
 import { invertColors, transformRasterImage as transformInvertImage } from "./features/invertColor/invertColor";
 import { applyFilmEffect, transformRasterImage as transformFilmImage } from "./features/filmEffect/filmEffect";
 import { applyChevronPattern, transformRasterImage as transformChevronImage } from "./features/chevronPattern/chevronPattern";
-import { applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
+import { applyHalftonePatternWebGL as applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
 
 export function App() {
   const currentSelection = useSelection("image");
   const isElementSelected = currentSelection.count > 0;
   const [effectType, setEffectType] = useState("grain");
   const [effectIntensity, setEffectIntensity] = useState(50);
-  const [overlayIndex, setOverlayIndex] = useState(0);
-  const [sunFading, setSunFading] = useState(false);
   const [patternSize, setPatternSize] = useState(10);
   const [dotSize, setDotSize] = useState(5);
+  const [angle, setAngle] = useState(0);
 
   async function handleClickInvert() {
     if (!isElementSelected) {
@@ -120,7 +119,7 @@ export function App() {
       const newImage = await transformHalftoneImage(
         content.ref,
         (ctx, imageData) => {
-          return applyHalftonePattern(imageData, dotSize);
+          return applyHalftonePattern(imageData, dotSize, angle);
         }
       );
 
@@ -181,6 +180,13 @@ export function App() {
           onChange={(value) => setDotSize(value)}
           min={1}
           max={20}
+          step={1}
+        />
+        <Slider
+          value={angle}
+          onChange={(value) => setAngle(value)}
+          min={0}
+          max={360}
           step={1}
         />
         <Button
