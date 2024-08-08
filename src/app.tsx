@@ -5,15 +5,13 @@ import { useSelection } from "utils/use_selection_hook";
 import styles from "styles/components.css";
 import { invertColors, transformRasterImage as transformInvertImage } from "./features/invertColor/invertColor";
 import { applyFilmEffect, transformRasterImage as transformFilmImage } from "./features/filmEffect/filmEffect";
-import { applyChevronPattern, transformRasterImage as transformChevronImage } from "./features/chevronPattern/chevronPattern";
-import { applyHalftonePatternWebGL as applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
+import { applyHalftonePatternGLFX as applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
 
 export function App() {
   const currentSelection = useSelection("image");
   const isElementSelected = currentSelection.count > 0;
   const [effectType, setEffectType] = useState("grain");
   const [effectIntensity, setEffectIntensity] = useState(50);
-  const [patternSize, setPatternSize] = useState(10);
   const [dotSize, setDotSize] = useState(5);
   const [angle, setAngle] = useState(0);
 
@@ -62,35 +60,6 @@ export function App() {
         content.ref,
         async (ctx, imageData) => {
           return await applyFilmEffect(imageData, effectType, effectIntensity);
-        }
-      );
-
-      const asset = await upload({
-        type: "IMAGE",
-        url: newImage.dataUrl,
-        mimeType: newImage.mimeType,
-        thumbnailUrl: newImage.dataUrl,
-        parentRef: content.ref,
-      });
-
-      content.ref = asset.ref;
-    }
-
-    await draft.save();
-  }
-
-  async function handleClickChevronPattern() {
-    if (!isElementSelected) {
-      return;
-    }
-
-    const draft = await currentSelection.read();
-
-    for (const content of draft.contents) {
-      const newImage = await transformChevronImage(
-        content.ref,
-        (ctx, imageData) => {
-          return applyChevronPattern(imageData, patternSize);
         }
       );
 
@@ -196,21 +165,6 @@ export function App() {
           stretch
         >
           Apply Halftone Pattern
-        </Button>
-        <Slider
-          value={patternSize}
-          onChange={(value) => setPatternSize(value)}
-          min={1}
-          max={50}
-          step={1}
-        />
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickChevronPattern}
-          stretch
-        >
-          Apply Chevron Pattern
         </Button>
       </Rows>
     </div>
