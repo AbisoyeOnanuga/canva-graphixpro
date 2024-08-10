@@ -1,6 +1,6 @@
 import { getTemporaryUrl, upload, ImageMimeType, ImageRef } from "@canva/asset";
 
-export const applyWatermark = async (imageData: ImageData, watermarkUrl: string) => {
+export const applyWatermark = (imageData: ImageData, watermark: HTMLImageElement) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("CanvasRenderingContext2D is not available");
@@ -8,14 +8,6 @@ export const applyWatermark = async (imageData: ImageData, watermarkUrl: string)
   canvas.width = imageData.width;
   canvas.height = imageData.height;
   ctx.putImageData(imageData, 0, 0);
-
-  const watermark = new Image();
-  watermark.crossOrigin = "Anonymous";
-  await new Promise((resolve, reject) => {
-    watermark.onload = resolve;
-    watermark.onerror = () => reject(new Error("Watermark could not be loaded"));
-    watermark.src = watermarkUrl;
-  });
 
   const watermarkWidth = canvas.width * 0.3; // Adjust size as needed
   const watermarkHeight = (watermark.height / watermark.width) * watermarkWidth;
