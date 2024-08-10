@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { upload } from "@canva/asset";
 import { Button, Rows, Text, Select, Slider } from "@canva/app-ui-kit";
 import { useSelection } from "utils/use_selection_hook";
@@ -6,6 +6,9 @@ import styles from "styles/components.css";
 import { invertColors, transformRasterImage as transformInvertImage } from "./features/invertColor/invertColor";
 import { applyFilmEffect, transformRasterImage as transformFilmImage } from "./features/filmEffect/filmEffect";
 import { applyHalftonePatternGLFX as applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
+import { applyWatermark, transformRasterImage as transformWatermarkImage } from "./features/watermark/watermark";
+
+const watermarkUrl = "https://example.com/path/to/watermark.png"; // Replace with your watermark URL
 
 export function App() {
   const currentSelection = useSelection("image");
@@ -14,6 +17,14 @@ export function App() {
   const [effectIntensity, setEffectIntensity] = useState(50);
   const [dotSize, setDotSize] = useState(5);
   const [angle, setAngle] = useState(0);
+  const [watermark, setWatermark] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = watermarkUrl;
+    img.onload = () => setWatermark(img);
+  }, []);
 
   async function handleClickInvert() {
     if (!isElementSelected) {
@@ -106,6 +117,35 @@ export function App() {
     await draft.save();
   }
 
+  async function handleClickWatermark() {
+    if (!isElementSelected || !watermark) {
+      return;
+    }
+
+    const draft = await currentSelection.read();
+
+    for (const content of draft.contents) {
+      const newImage = await transformWatermarkImage(
+        content.ref,
+        (ctx, imageData) => {
+          return applyWatermark(imageData, watermark);
+        }
+      );
+
+      const asset = await upload({
+        type: "IMAGE",
+        url: newImage.dataUrl,
+        mimeType: newImage.mimeType,
+        thumbnailUrl: newImage.dataUrl,
+        parentRef: content.ref,
+      });
+
+      content.ref = asset.ref;
+    }
+
+    await draft.save();
+  }
+
   return (
     <div className={styles.scrollContainer}>
       <Rows spacing="2u">
@@ -124,7 +164,6 @@ export function App() {
         <Select
           options={[
             { label: "Film Grain", value: "grain" },
-            { label: "Grunge", value: "grunge" },
           ]}
           value={effectType}
           onChange={(value) => setEffectType(value)}
@@ -136,6 +175,7 @@ export function App() {
           max={100}
           step={1}
         />
+        <Text>Effect Intensity</Text>
         <Button
           variant="primary"
           disabled={!isElementSelected}
@@ -151,6 +191,7 @@ export function App() {
           max={20}
           step={1}
         />
+        <Text>Dot Size</Text>
         <Slider
           value={angle}
           onChange={(value) => setAngle(value)}
@@ -158,6 +199,7 @@ export function App() {
           max={360}
           step={1}
         />
+        <Text>Angle</Text>
         <Button
           variant="primary"
           disabled={!isElementSelected}
@@ -165,6 +207,14 @@ export function App() {
           stretch
         >
           Apply Halftone Pattern
+        </Button>
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickWatermark}
+          stretch
+        >
+          Apply Watermark
         </Button>
       </Rows>
     </div>
