@@ -168,14 +168,14 @@ export function App() {
           value={effectType}
           onChange={(value) => setEffectType(value)}
         />
+        <Text>Effect Intensity</Text>
         <Slider
           value={effectIntensity}
           onChange={(value) => setEffectIntensity(value)}
           min={0}
           max={100}
           step={1}
-        />
-        <Text>Effect Intensity</Text>
+        /> 
         <Button
           variant="primary"
           disabled={!isElementSelected}
@@ -184,6 +184,7 @@ export function App() {
         >
           Apply Film Effect
         </Button>
+        <Text>Dot Size</Text>
         <Slider
           value={dotSize}
           onChange={(value) => setDotSize(value)}
@@ -191,7 +192,7 @@ export function App() {
           max={20}
           step={1}
         />
-        <Text>Dot Size</Text>
+        <Text>Angle</Text>
         <Slider
           value={angle}
           onChange={(value) => setAngle(value)}
@@ -199,7 +200,6 @@ export function App() {
           max={360}
           step={1}
         />
-        <Text>Angle</Text>
         <Button
           variant="primary"
           disabled={!isElementSelected}
