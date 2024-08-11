@@ -9,7 +9,7 @@ export const applyHalftonePatternGLFX = (imageData: ImageData, dotSize: number, 
     .dotScreen(canvas.width / 2, canvas.height / 2, angle, dotSize)
     .update();
 
-  return canvas.toDataURL();
+  return canvas.toDataURL('image/png'); // Ensure the format is PNG
 };
 
 export async function transformRasterImage(
@@ -53,7 +53,7 @@ export async function transformRasterImage(
   const newImageDataUrl = transformer(ctx, imageData);
   URL.revokeObjectURL(objectURL);
 
-  return { dataUrl: newImageDataUrl, mimeType };
+  return { dataUrl: newImageDataUrl, mimeType: 'image/png' }; // Ensure the mime type is PNG
 }
 
 function isSupportedMimeType(
