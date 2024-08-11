@@ -18,6 +18,9 @@ export function App() {
   const [dotSize, setDotSize] = useState(5);
   const [angle, setAngle] = useState(0);
   const [watermark, setWatermark] = useState<HTMLImageElement | null>(null);
+  const [watermarkPosition, setWatermarkPosition] = useState("bottom-right");
+  const [watermarkTransparency, setWatermarkTransparency] = useState(0.5);
+  const [watermarkSize, setWatermarkSize] = useState(0.3);
 
   useEffect(() => {
     const img = new Image();
@@ -128,7 +131,7 @@ export function App() {
       const newImage = await transformWatermarkImage(
         content.ref,
         (ctx, imageData) => {
-          return applyWatermark(imageData, watermark);
+          return applyWatermark(imageData, watermark, watermarkPosition, watermarkTransparency, watermarkSize);
         }
       );
 
@@ -152,71 +155,98 @@ export function App() {
         <Text>
           To make changes to this app, edit the <code>src/app.tsx</code> file,
           then close and reopen the app in the editor to preview the changes.
-        </Text>
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickInvert}
-          stretch
-        >
-          Invert Colors
-        </Button>
-        <Select
-          options={[
-            { label: "Film Grain", value: "grain" },
-          ]}
-          value={effectType}
-          onChange={(value) => setEffectType(value)}
-        />
-        <Text>Effect Intensity</Text>
-        <Slider
-          value={effectIntensity}
-          onChange={(value) => setEffectIntensity(value)}
-          min={0}
-          max={100}
-          step={1}
-        /> 
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickFilmEffect}
-          stretch
-        >
-          Apply Film Effect
-        </Button>
-        <Text>Dot Size</Text>
-        <Slider
-          value={dotSize}
-          onChange={(value) => setDotSize(value)}
-          min={1}
-          max={20}
-          step={1}
-        />
-        <Text>Angle</Text>
-        <Slider
-          value={angle}
-          onChange={(value) => setAngle(value)}
-          min={0}
-          max={360}
-          step={1}
-        />
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickHalftonePattern}
-          stretch
-        >
-          Apply Halftone Pattern
-        </Button>
-        <Button
-          variant="primary"
-          disabled={!isElementSelected}
-          onClick={handleClickWatermark}
-          stretch
-        >
-          Apply Watermark
-        </Button>
-      </Rows>
-    </div>
-  );
-}
+          </Text>
+           <Button
+             variant="primary"
+             disabled={!isElementSelected}
+             onClick={handleClickInvert}
+             stretch
+           >
+             Invert Colors
+           </Button>
+           <Select
+             options={[
+               { label: "Film Grain", value: "grain" },
+             ]}
+             value={effectType}
+             onChange={(value) => setEffectType(value)}
+           />
+            <Text>Effect Intensity</Text>
+           <Slider
+             value={effectIntensity}
+             onChange={(value) => setEffectIntensity(value)}
+             min={0}
+             max={100}
+             step={1}
+           />
+           <Button
+             variant="primary"
+             disabled={!isElementSelected}
+             onClick={handleClickFilmEffect}
+             stretch
+           >
+             Apply Film Effect
+           </Button>
+           <Text>Dot Size</Text>
+           <Slider
+             value={dotSize}
+             onChange={(value) => setDotSize(value)}
+             min={1}
+             max={20}
+             step={1}
+           />
+           <Text>Angle</Text>
+           <Slider
+             value={angle}
+             onChange={(value) => setAngle(value)}
+             min={0}
+             max={360}
+             step={1}
+           />
+           <Button
+             variant="primary"
+             disabled={!isElementSelected}
+             onClick={handleClickHalftonePattern}
+             stretch
+           >
+             Apply Halftone Pattern
+           </Button>
+           <Text>Watermark Position</Text>
+           <Select
+             options={[
+               { label: "Bottom Right", value: "bottom-right" },
+               { label: "Bottom Left", value: "bottom-left" },
+               { label: "Top Right", value: "top-right" },
+               { label: "Top Left", value: "top-left" },
+             ]}
+             value={watermarkPosition}
+             onChange={(value) => setWatermarkPosition(value)}
+           />
+            <Text>Watermark Transparency</Text>
+           <Slider
+             value={watermarkTransparency}
+             onChange={(value) => setWatermarkTransparency(value)}
+             min={0}
+             max={1}
+             step={0.1}
+           />
+           <Text>Watermark Size</Text>
+           <Slider
+             value={watermarkSize}
+             onChange={(value) => setWatermarkSize(value)}
+             min={0.1}
+             max={1}
+             step={0.1}
+           />
+           <Button
+             variant="primary"
+             disabled={!isElementSelected}
+             onClick={handleClickWatermark}
+             stretch
+           >
+             Apply Watermark
+           </Button>
+         </Rows>
+       </div>
+     );
+   }
