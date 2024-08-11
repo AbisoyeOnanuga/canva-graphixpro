@@ -1,6 +1,12 @@
 import { getTemporaryUrl, upload, ImageMimeType, ImageRef } from "@canva/asset";
 
-export const applyWatermark = (imageData: ImageData, watermark: HTMLImageElement) => {
+export const applyWatermark = (
+  imageData: ImageData,
+  watermark: HTMLImageElement,
+  position: string,
+  transparency: number,
+  size: number
+) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("CanvasRenderingContext2D is not available");
@@ -9,11 +15,39 @@ export const applyWatermark = (imageData: ImageData, watermark: HTMLImageElement
   canvas.height = imageData.height;
   ctx.putImageData(imageData, 0, 0);
 
-  const watermarkWidth = canvas.width * 0.3; // Adjust size as needed
+  const watermarkWidth = canvas.width * size;
   const watermarkHeight = (watermark.height / watermark.width) * watermarkWidth;
-  ctx.drawImage(watermark, canvas.width - watermarkWidth - 10, canvas.height - watermarkHeight - 10, watermarkWidth, watermarkHeight);
 
-  return canvas.toDataURL();
+  ctx.globalAlpha = transparency;
+
+  let x = 0;
+  let y = 0;
+
+  switch (position) {
+    case "top-left":
+      x = 10;
+      y = 10;
+      break;
+    case "top-right":
+      x = canvas.width - watermarkWidth - 10;
+      y = 10;
+      break;
+    case "bottom-left":
+      x = 10;
+      y = canvas.height - watermarkHeight - 10;
+      break;
+    case "bottom-right":
+      x = canvas.width - watermarkWidth - 10;
+      y = canvas.height - watermarkHeight - 10;
+      break;
+    default:
+      x = canvas.width - watermarkWidth - 10;
+      y = canvas.height - watermarkHeight - 10;
+  }
+
+  ctx.drawImage(watermark, x, y, watermarkWidth, watermarkHeight);
+
+  return canvas.toDataURL('image/png'); // Ensure the format is PNG
 };
 
 export async function transformRasterImage(
@@ -57,7 +91,7 @@ export async function transformRasterImage(
   const newImageDataUrl = transformer(ctx, imageData);
   URL.revokeObjectURL(objectURL);
 
-  return { dataUrl: newImageDataUrl, mimeType };
+  return { dataUrl: newImageDataUrl, mimeType: 'image/png' }; // Ensure the mime type is PNG
 }
 
 function isSupportedMimeType(
