@@ -6,7 +6,8 @@ import styles from "styles/components.css";
 import { invertColors, transformRasterImage as transformInvertImage } from "./features/invertColor/invertColor";
 import { applyFilmEffect, transformRasterImage as transformFilmImage } from "./features/filmEffect/filmEffect";
 import { applyHalftonePatternGLFX as applyHalftonePattern, transformRasterImage as transformHalftoneImage } from "./features/halftonePattern/halftonePattern";
-import { applyWatermark, transformRasterImage as transformWatermarkImage } from "./features/watermark/watermark";
+import { applyEffect, transformRasterImage as transformEffectImage } from "./features/watermark/effect";
+import { addNativeElement, getCurrentPageContext } from "@canva/design";
 
 export function App() {
   const currentSelection = useSelection("image");
@@ -15,11 +16,103 @@ export function App() {
   const [effectIntensity, setEffectIntensity] = useState(50);
   const [dotSize, setDotSize] = useState(5);
   const [angle, setAngle] = useState(0);
-  const [watermarkImage, setWatermarkImage] = useState<ImageRef | null>(null);
-  const [watermarkPosition, setWatermarkPosition] = useState("bottom-right");
-  const [watermarkTransparency, setWatermarkTransparency] = useState(0.5);
-  const [watermarkSize, setWatermarkSize] = useState(0.3);
+  const [effectTransparency, setEffectTransparency] = useState(0.5);
+  const [effectSize, setEffectSize] = useState(0.5);
+  const [effectPosition, setEffectPosition] = useState("bottom-right");
 
+  async function handleClickEffect() {
+    if (!isElementSelected) {
+      return;
+    }
+  
+    const draft = await currentSelection.read();
+  
+    for (const content of draft.contents) {
+      const newImage = await transformEffectImage(
+        content.ref,
+        (ctx, imageData) => {
+          const result = applyEffect(imageData, effectTransparency, effectSize);
+          return result;
+        }
+      );
+  
+      const asset = await upload({
+        type: "IMAGE",
+        url: newImage.dataUrl,
+        mimeType: newImage.mimeType,
+        thumbnailUrl: newImage.dataUrl,
+        parentRef: content.ref,
+      });
+  
+      const context = await getCurrentPageContext();
+      const pageWidth = context.dimensions?.width ?? 100;
+      const pageHeight = context.dimensions?.height ?? 100;
+      const width = pageWidth * effectSize;
+      const height = pageHeight * effectSize;
+  
+      if (effectPosition === "grid") {
+        const gridSize = 3;
+        const cellWidth = pageWidth / gridSize;
+        const cellHeight = pageHeight / gridSize;
+  
+        for (let row = 0; row < gridSize; row++) {
+          for (let col = 0; col < gridSize; col++) {
+            const top = row * cellHeight;
+            const left = col * cellWidth;
+  
+            await addNativeElement({
+              type: "IMAGE",
+              ref: asset.ref,
+              width: cellWidth,
+              height: cellHeight,
+              top,
+              left,
+            });
+          }
+        }
+      } else {
+        let top = 0;
+        let left = 0;
+  
+        switch (effectPosition) {
+          case "top-left":
+            top = 0;
+            left = 0;
+            break;
+          case "top-right":
+            top = 0;
+            left = pageWidth - width;
+            break;
+          case "bottom-left":
+            top = pageHeight - height;
+            left = 0;
+            break;
+          case "bottom-right":
+            top = pageHeight - height;
+            left = pageWidth - width;
+            break;
+          default:
+            top = pageHeight - height;
+            left = pageWidth - width;
+        }
+  
+        await addNativeElement({
+          type: "IMAGE",
+          ref: asset.ref,
+          width,
+          height,
+          top,
+          left,
+        });
+      }
+  
+      // Remove the original image
+      content.ref = asset.ref;
+    }
+  
+    await draft.save();
+  }  
+  
   async function handleClickInvert() {
     if (!isElementSelected) {
       return;
@@ -110,54 +203,6 @@ export function App() {
 
     await draft.save();
   }
-
-  async function handleClickWatermark() {
-    if (!isElementSelected || !watermarkImage) {
-      return;
-    }
-  
-    const draft = await currentSelection.read();
-  
-    for (const content of draft.contents) {
-      const newImage = await transformWatermarkImage(
-        content.ref,
-        async (ctx, imageData) => {
-          const { url } = await getTemporaryUrl({
-            type: "IMAGE",
-            ref: watermarkImage,
-          });
-  
-          const response = await fetch(url, { mode: "cors" });
-          const imageBlob = await response.blob();
-          const objectURL = URL.createObjectURL(imageBlob);
-          const watermark = new Image();
-          watermark.crossOrigin = "Anonymous";
-  
-          await new Promise((resolve, reject) => {
-            watermark.onload = resolve;
-            watermark.onerror = () => reject(new Error("Watermark could not be loaded"));
-            watermark.src = objectURL;
-          });
-  
-          const result = applyWatermark(imageData, watermark, watermarkPosition, watermarkTransparency, watermarkSize);
-          URL.revokeObjectURL(objectURL);
-          return result;
-        }
-      );
-  
-      const asset = await upload({
-        type: "IMAGE",
-        url: newImage.dataUrl,
-        mimeType: newImage.mimeType,
-        thumbnailUrl: newImage.dataUrl,
-        parentRef: content.ref,
-      });
-  
-      content.ref = asset.ref;
-    }
-  
-    await draft.save();
-  }
   
   return (
     <div className={styles.scrollContainer}>
@@ -165,119 +210,123 @@ export function App() {
         <Text variant="bold">Graphixpro</Text>
         <Text variant="bold">Graphixpro! Select a feature to get started.</Text>
 
-<Text variant="regular">Invert Colors</Text>
-<Button
-  variant="primary"
-  disabled={!isElementSelected}
-  onClick={handleClickInvert}
-  stretch
->
-  Invert Colors
-</Button>
+        <Text variant="regular">Invert Colors</Text>
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickInvert}
+          stretch
+        >
+          Invert Colors
+        </Button>
 
-<Text variant="regular">Apply Film Effect</Text>
-<Select
-  options={[
-    { label: "Film Grain", value: "grain" },
-  ]}
-  value={effectType}
-  onChange={(value) => setEffectType(value)}
-/>
-<Slider
-  value={effectIntensity}
-  onChange={(value) => setEffectIntensity(value)}
-  min={0}
-  max={100}
-  step={1}
-/>
-<Button
-  variant="primary"
-  disabled={!isElementSelected}
-  onClick={handleClickFilmEffect}
-  stretch
->
-  Apply Film Effect
-</Button>
+        <Text variant="regular">Apply Film Effect</Text>
+        <Select
+          options={[
+            { label: "Film Grain", value: "grain" },
+          ]}
+          value={effectType}
+          onChange={(value) => setEffectType(value)}
+        />
+        <Slider
+          value={effectIntensity}
+          onChange={(value) => setEffectIntensity(value)}
+          min={0}
+          max={100}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickFilmEffect}
+          stretch
+        >
+          Apply Film Effect
+        </Button>
 
-<Text variant="regular">Apply Halftone Pattern</Text>
-<Text>Dot Size</Text>
-<Slider
-  value={dotSize}
-  onChange={(value) => setDotSize(value)}
-  min={1}
-  max={20}
-  step={1}
-/>
-<Text>Angle</Text>
-<Slider
-  value={angle}
-  onChange={(value) => setAngle(value)}
-  min={0}
-  max={360}
-  step={1}
-/>
-<Button
-  variant="primary"
-  disabled={!isElementSelected}
-  onClick={handleClickHalftonePattern}
-  stretch
->
-  Apply Halftone Pattern
-</Button>
+        <Text variant="regular">Apply Halftone Pattern</Text>
+        <Text>Dot Size</Text>
+        <Slider
+          value={dotSize}
+          onChange={(value) => setDotSize(value)}
+          min={1}
+          max={20}
+          step={1}
+        />
+        <Text>Angle</Text>
+        <Slider
+          value={angle}
+          onChange={(value) => setAngle(value)}
+          min={0}
+          max={360}
+          step={1}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickHalftonePattern}
+          stretch
+        >
+          Apply Halftone Pattern
+        </Button>
 
-<Text variant="regular">Apply Watermark</Text>
-<Text>Watermark Position</Text>
-<Select
-  options={[
-    { label: "Bottom Right", value: "bottom-right" },
-    { label: "Bottom Left", value: "bottom-left" },
-    { label: "Top Right", value: "top-right" },
-    { label: "Top Left", value: "top-left" },
-    { label: "Grid", value: "grid" },
-  ]}
-  value={watermarkPosition}
-  onChange={(value) => setWatermarkPosition(value)}
-/>
-<Text>Watermark Transparency</Text>
-<Slider
-  value={watermarkTransparency}
-  onChange={(value) => setWatermarkTransparency(value)}
-  min={0}
-  max={1}
-  step={0.1}
-/>
-<Text>Watermark Size</Text>
-<Slider
-  value={watermarkSize}
-  onChange={(value) => setWatermarkSize(value)}
-  min={0.1}
-  max={1}
-  step={0.1}
-/>
-<Button
-  variant="primary"
-  disabled={!isElementSelected}
-  onClick={handleClickWatermark}
-  stretch
->
-  Watermark coming soon...
-</Button>
+        <Text variant="bold">Apply Watermark Effect</Text>
+        <Text>Effect Transparency</Text>
+        <Slider
+          value={effectTransparency}
+          onChange={(value) => setEffectTransparency(value)}
+          min={0}
+          max={1}
+          step={0.1}
+        />
+        <Text>Effect Size</Text>
+        <Slider
+          value={effectSize}
+          onChange={(value) => setEffectSize(value)}
+          min={0.1}
+          max={1}
+          step={0.1}
+        />
+        <Text>Effect Position</Text>
+        <Select
+          options={[
+            { label: "Bottom Right", value: "bottom-right" },
+            { label: "Bottom Left", value: "bottom-left" },
+            { label: "Top Right", value: "top-right" },
+            { label: "Top Left", value: "top-left" },
+            { label: "Grid", value: "grid" },
+          ]}
+          value={effectPosition}
+          onChange={(value) => setEffectPosition(value)}
+        />
+        <Button
+          variant="primary"
+          disabled={!isElementSelected}
+          onClick={handleClickEffect}
+          stretch
+        >
+          Apply Effect
+        </Button>
 
-<Text variant="regular">About Us</Text>
-<Text>
-  Graphixpro is a powerful image editing app designed to help you create stunning visuals with ease. Our features include color inversion, film effects, halftone patterns, and watermarking. For more information, visit our GitHub repository.
-</Text>
-<Text size="medium">
-  <Link
-      href="https://github.com/AbisoyeOnanuga/canva-graphixpro"
-      id="github-link"
-      requestOpenExternalUrl={() => {}}
-      title="Visit Our GitHub"
-    >
-      Visit Our GitHub
-    </Link>
-</Text>
-</Rows>
-</div>
-);
+
+
+        <Text variant="regular">About Us</Text>
+        <Text>
+          Graphixpro is a powerful image editing app designed to help you create stunning visuals with ease. Our features include color inversion, film effects, halftone patterns, and watermarking. For more information, visit our GitHub repository.
+        </Text>
+        <Text size="medium">
+          <Link
+            href="https://github.com/AbisoyeOnanuga/canva-graphixpro"
+            id="github-link"
+            requestOpenExternalUrl={() => {
+              console.log("Request to open external URL");
+            }}
+            title="Visit Our GitHub"
+          >
+            Visit Our GitHub
+          </Link>
+        </Text>
+      </Rows>
+    </div>
+  );
 }
