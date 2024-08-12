@@ -260,7 +260,7 @@ export function App() {
   onClick={handleClickWatermark}
   stretch
 >
-  Apply Watermark
+  Watermark coming soon...
 </Button>
 
 <Text variant="regular">About Us</Text>
