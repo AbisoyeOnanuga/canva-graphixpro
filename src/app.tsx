@@ -15,9 +15,9 @@ export function App() {
   const [effectType, setEffectType] = useState("grain");
   const [effectIntensity, setEffectIntensity] = useState(50);
   const [dotSize, setDotSize] = useState(5);
-  const [angle, setAngle] = useState(0);
+  const [angle, setAngle] = useState(15);
   const [effectTransparency, setEffectTransparency] = useState(0.5);
-  const [effectSize, setEffectSize] = useState(0.5);
+  const [effectSize, setEffectSize] = useState(0.1);
   const [effectPosition, setEffectPosition] = useState("bottom-right");
 
   async function handleClickEffect() {
@@ -55,10 +55,13 @@ export function App() {
         const cellHeight = height / gridSize;
         const spacing = (pageWidth - width) / (gridSize + 1);
   
+        const gridTop = (pageHeight - (cellHeight * gridSize + spacing * (gridSize - 1))) / 2;
+        const gridLeft = (pageWidth - (cellWidth * gridSize + spacing * (gridSize - 1))) / 2;
+  
         for (let row = 0; row < gridSize; row++) {
           for (let col = 0; col < gridSize; col++) {
-            const top = row * (cellHeight + spacing) + spacing;
-            const left = col * (cellWidth + spacing) + spacing;
+            const top = gridTop + row * (cellHeight + spacing);
+            const left = gridLeft + col * (cellWidth + spacing);
   
             await addNativeElement({
               type: "IMAGE",
@@ -124,7 +127,7 @@ export function App() {
         });
       }
   
-      // Remove the original image
+      // Replace the original image
       content.ref = asset.ref;
     }
   
