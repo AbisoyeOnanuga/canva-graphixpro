@@ -31,8 +31,7 @@ export function App() {
       const newImage = await transformEffectImage(
         content.ref,
         (ctx, imageData) => {
-          const result = applyEffect(imageData, effectTransparency, effectSize);
-          return result;
+          return applyEffect(imageData, effectTransparency, effectSize);
         }
       );
   
@@ -52,13 +51,14 @@ export function App() {
   
       if (effectPosition === "grid") {
         const gridSize = 3;
-        const cellWidth = pageWidth / gridSize;
-        const cellHeight = pageHeight / gridSize;
+        const cellWidth = width / gridSize;
+        const cellHeight = height / gridSize;
+        const spacing = (pageWidth - width) / (gridSize + 1);
   
         for (let row = 0; row < gridSize; row++) {
           for (let col = 0; col < gridSize; col++) {
-            const top = row * cellHeight;
-            const left = col * cellWidth;
+            const top = row * (cellHeight + spacing) + spacing;
+            const left = col * (cellWidth + spacing) + spacing;
   
             await addNativeElement({
               type: "IMAGE",
@@ -69,6 +69,24 @@ export function App() {
               left,
             });
           }
+        }
+      } else if (effectPosition === "corners") {
+        const positions = [
+          { top: 0, left: 0 }, // top-left
+          { top: 0, left: pageWidth - width }, // top-right
+          { top: pageHeight - height, left: 0 }, // bottom-left
+          { top: pageHeight - height, left: pageWidth - width }, // bottom-right
+        ];
+  
+        for (const pos of positions) {
+          await addNativeElement({
+            type: "IMAGE",
+            ref: asset.ref,
+            width,
+            height,
+            top: pos.top,
+            left: pos.left,
+          });
         }
       } else {
         let top = 0;
@@ -271,7 +289,7 @@ export function App() {
         </Button>
 
         <Text variant="bold">Apply Watermark Effect</Text>
-        <Text>Effect Transparency</Text>
+        <Text>Watermark Transparency</Text>
         <Slider
           value={effectTransparency}
           onChange={(value) => setEffectTransparency(value)}
@@ -279,15 +297,15 @@ export function App() {
           max={1}
           step={0.1}
         />
-        <Text>Effect Size</Text>
+        <Text>Watermark Size</Text>
         <Slider
           value={effectSize}
           onChange={(value) => setEffectSize(value)}
           min={0.1}
-          max={1}
+          max={0.5}
           step={0.1}
         />
-        <Text>Effect Position</Text>
+        <Text>Watermark Position</Text>
         <Select
           options={[
             { label: "Bottom Right", value: "bottom-right" },
@@ -295,6 +313,7 @@ export function App() {
             { label: "Top Right", value: "top-right" },
             { label: "Top Left", value: "top-left" },
             { label: "Grid", value: "grid" },
+            { label: "Corners", value: "corners" },
           ]}
           value={effectPosition}
           onChange={(value) => setEffectPosition(value)}
@@ -305,10 +324,8 @@ export function App() {
           onClick={handleClickEffect}
           stretch
         >
-          Apply Effect
+          Apply Watermark
         </Button>
-
-
 
         <Text variant="regular">About Us</Text>
         <Text>
