@@ -17,7 +17,7 @@ export function App() {
   const [dotSize, setDotSize] = useState(5);
   const [angle, setAngle] = useState(15);
   const [effectTransparency, setEffectTransparency] = useState(0.5);
-  const [effectSize, setEffectSize] = useState(0.1);
+  const [effectSize, setEffectSize] = useState(0.2);
   const [effectPosition, setEffectPosition] = useState("bottom-right");
 
   async function handleClickEffect() {
