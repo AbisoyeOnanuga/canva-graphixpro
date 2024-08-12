@@ -20,39 +20,30 @@ export const applyWatermark = (
 
   ctx.globalAlpha = transparency;
 
-  let x = 0;
-  let y = 0;
+  const positions = {
+    "top-left": { x: 10, y: 10 },
+    "top-right": { x: canvas.width - watermarkWidth - 10, y: 10 },
+    "bottom-left": { x: 10, y: canvas.height - watermarkHeight - 10 },
+    "bottom-right": { x: canvas.width - watermarkWidth - 10, y: canvas.height - watermarkHeight - 10 },
+  };
 
-  switch (position) {
-    case "top-left":
-      x = 10;
-      y = 10;
-      break;
-    case "top-right":
-      x = canvas.width - watermarkWidth - 10;
-      y = 10;
-      break;
-    case "bottom-left":
-      x = 10;
-      y = canvas.height - watermarkHeight - 10;
-      break;
-    case "bottom-right":
-      x = canvas.width - watermarkWidth - 10;
-      y = canvas.height - watermarkHeight - 10;
-      break;
-    default:
-      x = canvas.width - watermarkWidth - 10;
-      y = canvas.height - watermarkHeight - 10;
+  if (position === "grid") {
+    for (let y = 0; y < canvas.height; y += watermarkHeight + 20) {
+      for (let x = 0; x < canvas.width; x += watermarkWidth + 20) {
+        ctx.drawImage(watermark, x, y, watermarkWidth, watermarkHeight);
+      }
+    }
+  } else {
+    const { x, y } = positions[position] || positions["bottom-right"];
+    ctx.drawImage(watermark, x, y, watermarkWidth, watermarkHeight);
   }
-
-  ctx.drawImage(watermark, x, y, watermarkWidth, watermarkHeight);
 
   return canvas.toDataURL('image/png'); // Ensure the format is PNG
 };
 
 export async function transformRasterImage(
   ref: ImageRef,
-  transformer: (ctx: CanvasRenderingContext2D, imageData: ImageData) => string
+  transformer: (ctx: CanvasRenderingContext2D, imageData: ImageData) => Promise<string> | string
 ): Promise<{ dataUrl: string; mimeType: ImageMimeType }> {
   const { url } = await getTemporaryUrl({
     type: "IMAGE",
@@ -88,7 +79,7 @@ export async function transformRasterImage(
 
   ctx.drawImage(image, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const newImageDataUrl = transformer(ctx, imageData);
+  const newImageDataUrl = await transformer(ctx, imageData);
   URL.revokeObjectURL(objectURL);
 
   return { dataUrl: newImageDataUrl, mimeType: 'image/png' }; // Ensure the mime type is PNG

@@ -6,7 +6,6 @@ export const applyFilmEffect = (imageData: ImageData, effectType: string, intens
 
   switch (effectType) {
     case "grain":
-      // Apply film grain effect
       for (let i = 0; i < imageData.data.length; i += 4) {
         const grain = (Math.random() - 0.5) * intensity;
         imageData.data[i] += grain;     // Red
@@ -15,7 +14,6 @@ export const applyFilmEffect = (imageData: ImageData, effectType: string, intens
       }
       break;
     case "grunge":
-      // Apply grunge effect
       for (let i = 0; i < imageData.data.length; i += 4) {
         const dirt = (Math.random() - 0.5) * intensity;
         imageData.data[i] += dirt;     // Red
@@ -23,7 +21,6 @@ export const applyFilmEffect = (imageData: ImageData, effectType: string, intens
         imageData.data[i + 2] += dirt; // Blue
       }
 
-      // Add scratches
       for (let i = 0; i < intensity * 10; i++) {
         const x = Math.floor(Math.random() * imageData.width);
         const y = Math.floor(Math.random() * imageData.height);
