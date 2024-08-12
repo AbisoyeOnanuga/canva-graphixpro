@@ -45,13 +45,13 @@ The Invert Color feature allows users to invert the colors of selected images wi
 The Film Effect feature adds a vintage film look to images, mimicking the grain and color variations of old film stock.
 
 - Usage: Users can apply the Film Effect and adjust settings like grain intensity and color tone.
-- Implementation: The feature uses CSS filters and JavaScript to overlay grain textures and adjust color properties3.
+- Implementation: The feature uses CSS filters and JavaScript to overlay grain textures and adjust color properties.
 
 ## Halftone Pattern
 The Halftone Pattern feature simulates the look of traditional halftone printing, creating a dotted effect that varies in size to represent different shades.
 
 - Usage: Users can apply the Halftone Pattern to their images and adjust parameters such as dot size, shape, and spacing.
-- Implementation: This feature leverages the HTML5 Canvas API to manipulate image pixels and create the halftone effect2.
+- Implementation: This feature leverages the HTML5 Canvas API to manipulate image pixels and create the halftone effect.
 
 ## Watermark
 ### Overview
